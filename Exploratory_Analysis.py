@@ -50,3 +50,37 @@ plt.xlabel("Columns")
 plt.ylabel("Count of Missing Values")
 plt.grid(axis="y", linestyle="--", alpha=0.7)
 plt.show()
+
+# Check for binary columns (numerical columns with only 0 and 1)
+binary_cols = [col for col in numerical_col if data[col].dropna().isin([0, 1]).all()]
+true_numerical_col = [col for col in numerical_col if col not in binary_cols]
+
+print("\n\n\nBinary Columns (Yes/No encoded):", binary_cols, len(binary_cols))
+print("True Numerical Columns:", true_numerical_col, len(true_numerical_col))
+
+# Analyze the true numerical column (age, column 55)
+plt.figure(figsize=(8, 5))
+sns.histplot(data[55].dropna(), kde=True, bins=200, color="skyblue")
+plt.title("Distribution of Age (Column 55)")
+plt.xlabel("Age")
+plt.ylabel("Frequency")
+plt.grid(axis="y", linestyle="--", alpha=0.7)
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
