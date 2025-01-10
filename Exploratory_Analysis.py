@@ -67,14 +67,21 @@ plt.ylabel("Frequency")
 plt.grid(axis="y", linestyle="--", alpha=0.7)
 plt.show()
 
-
+"""
 # Analyze categorical column
 for col in categorical_col:
     print(f"Column {col} has {data[col].nunique()} unique values.")
     print(data[col].value_counts(normalize=True).head(5))  
     print("\n")
+"""
+print("\n\n\n############\n\n\n")
 
+# Get rid of inkonsistencies (data cleaning)
 
+for col in categorical_col:
+    data[col] = data[col].str.strip().str.lower()  
+    print(f"Unique values in {col} after cleaning:")
+    print(data[col].unique())
 
 
 
