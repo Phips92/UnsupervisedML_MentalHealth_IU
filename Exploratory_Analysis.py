@@ -83,6 +83,66 @@ for col in categorical_col:
     print(f"Unique values in {col} after cleaning:")
     print(data[col].unique())
 
+print("\n\n\n############\n\n\n")
+print("Cleaned column 56")
+# Starting with cleaning column 56 "gender"
+
+gender_mapping = {
+    # Male
+    "male": "male", "m": "male", "man": "male", "cis male": "male", "male.": "male", 
+    "male (cis)": "male", "malr": "male", "cis man": "male", "m|": "male", "mail": "male",
+    
+    # Female
+    "female": "female", "f": "female", "woman": "female", "cis female": "female",
+    "female assigned at birth": "female", "female/woman": "female", "cis-woman": "female",
+    "i identify as female.": "female",
+    
+    # Non-binary / Genderqueer
+    "non-binary": "non-binary", "genderfluid": "non-binary", "genderqueer": "non-binary",
+    "nb masculine": "non-binary", "enby": "non-binary", "genderqueer woman": "non-binary",
+    "androgynous": "non-binary", "agender": "non-binary", "genderflux demi-girl": "non-binary",
+    "fluid": "non-binary",
+    
+    # Transgender
+    "transitioned, m2f": "transgender", "mtf": "transgender", "male (trans, ftm)": "transgender",
+    "transgender woman": "transgender",
+    
+    # Other
+    "bigender": "other", "unicorn": "other", "human": "other", "none of your business": "other",
+    "female (props for making this a freeform field, though)": "other",
+    "other/transfeminine": "other", "female or multi-gender femme": "other",
+    "dude": "other", "cisdude": "other", "afab": "other", "sex is male": "other",
+    "female-bodied; no feelings about gender": "other",
+    "i'm a man why didn't you make this a drop down question. you should of asked sex? and i would of answered yes please. seriously how much text can this take?": "other",
+    
+    # Unknown
+    None: "unknown",  # Handle NaN values
+    "nan": "unknown"
+}
+
+# Use mapping for row 56
+data[56] = data[56].map(gender_mapping).fillna("unknown")
+
+# Checking column 56
+print("Unique values in Column 56 after cleaning:")
+print(data[56].unique())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
