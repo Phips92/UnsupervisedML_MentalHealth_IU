@@ -127,8 +127,18 @@ data[56] = data[56].map(gender_mapping).fillna("unknown")
 print("Unique values in Column 56 after cleaning:")
 print(data[56].unique())
 
+print("\n\n############\n\n")
 
+# Replacing NaN for column 1-35
+for col in [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]:
+    data[col] = data[col].fillna("unknown")
 
+# Überprüfung der Änderungen
+for col in [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]:
+    print(f"Unique values in {col} after NaN replacement:")
+    print(data[col].unique())
 
 
 
