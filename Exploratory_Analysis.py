@@ -130,9 +130,9 @@ print(data[56].unique())
 
 print("\n\n############\n\n")
 
-# Replacing NaN for column 1-35, +51
-for col in [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 
-            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 51]:
+# Replacing NaN for simple categorical columns
+for col in [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23,
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 46, 47, 50, 53, 54, 62]:
     data[col] = data[col].fillna("unknown")
 
 # Checking columns
@@ -173,7 +173,7 @@ print(data.info())
    - Identify columns with open-ended text responses.
    - Develop a strategy for analyzing these responses, such as:
      a. Grouping similar answers into broader categories.
-     b. Identifying key themes or sentiments using text analysis.
+     b. Identifying key themes or sentiments using text analysis (LSA,LDA?)
      c. Retaining original text for detailed analysis but creating helper columns for simplified categories.
    - Handle missing or NaN values as needed.
 
@@ -204,7 +204,6 @@ data[42] = data[42].map(willingness_mapping).fillna("unknown")
 # Checking column 42
 print("Unique values in Column 42 after cleaning:")
 print(data[42].unique())
-
 
 
 
