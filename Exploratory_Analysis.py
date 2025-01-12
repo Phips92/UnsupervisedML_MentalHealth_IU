@@ -132,7 +132,7 @@ print("\n\n############\n\n")
 
 # Replacing NaN for simple categorical columns
 for col in [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23,
-            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 46, 47, 50, 53, 54, 62]:
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 46, 47, 50, 53, 54, 58, 60, 62]:
     data[col] = data[col].fillna("unknown")
 
 # Checking columns
@@ -206,7 +206,78 @@ print("Unique values in Column 42 after cleaning:")
 print(data[42].unique())
 
 
+"""
+Process Column 61: Split, Standardize, and Create Role Flags
 
+This script processes Column 61, which contains combined roles as strings (e.g. "back-end developer|front-end developer").
+The goal is to:
+1. Split the combined roles into a list of individual roles.
+2. Standardize the role names using a predefined mapping to ensure consistency (e.g. "back-end developer" -> "backend_developer").
+3. Identify all unique roles across the dataset.
+4. Create dummy columns for each unique role, assigning:
+   - 1 if the role is present in a row.
+   - 0 if the role is absent.
+
+Why this is done:
+- **Consistency**: Standardizing role names ensures uniformity, reducing inconsistencies in analysis.
+- **Granularity**: Splitting combined roles allows for more precise analysis of specific roles.
+- **Feature Engineering**: Dummy columns make the data compatible with machine learning models and statistical analysis, enabling exploration of relationships between roles and other variables.
+
+The resulting dataset will have:
+- Original combined roles in Column 61.
+- A helper column ("61_split") with standardized lists of roles.
+- Additional columns (e.g., "role_backend_developer") representing each unique role with binary indicators.
+
+"""
+
+
+# Split column 61 into a list of roles
+data["61_split"] = data[61].str.split("|")
+
+# Standardize role names for consistency
+role_mapping = {
+    "back-end developer": "backend_developer",
+    "front-end developer": "frontend_developer",
+    "devops/sysadmin": "devops",
+    "supervisor/team lead": "team_lead",
+    "executive leadership": "executive",
+    "dev evangelist/advocate": "dev_evangelist",
+    "one-person shop": "one_person_shop",
+    "designer": "designer",
+    "support": "support",
+    "hr": "hr",
+    "sales": "sales",
+    "other": "other"
+}
+
+def standardize_roles(roles):
+    """Standardize roles using the mapping dictionary."""
+    if isinstance(roles, list):
+        return [role_mapping.get(role.strip(), role.strip()) for role in roles]
+    return roles
+
+# Apply role standardization
+data["61_split"] = data["61_split"].apply(standardize_roles)
+
+# Identify all unique roles from the split column
+all_roles = set()
+for roles in data["61_split"].dropna():
+    all_roles.update(roles)
+
+# Create dummy columns for each unique role
+def assign_role_flags(row, role):
+    """Assign 1 if the role is present in the row, otherwise 0."""
+    if isinstance(row, list) and role in row:
+        return 1
+    return 0
+
+for role in all_roles:
+    column_name = f"role_{role}"
+    data[column_name] = data["61_split"].apply(assign_role_flags, role=role)
+
+# Check the processed data
+print(data.head())
+print(data.info())
 
 
 
