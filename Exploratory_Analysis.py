@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from itertools import chain
 
 
 # Load the dataset
@@ -129,26 +130,36 @@ print(data[56].unique())
 
 print("\n\n############\n\n")
 
-# Replacing NaN for column 1-35
+# Replacing NaN for column 1-35, +51
 for col in [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 
-            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]:
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 51]:
     data[col] = data[col].fillna("unknown")
 
-# Überprüfung der Änderungen
+# Checking columns
 for col in [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 
-            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]:
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 51]:
     print(f"Unique values in {col} after NaN replacement:")
     print(data[col].unique())
 
+# Column 51 "diagnose"
+# Split combined values 
+data["51_split"] = data[51].str.split("|")
 
+unique_categories = set(chain.from_iterable(data["51_split"].dropna()))
+print(f"Unique categories: {unique_categories}")
 
+category_counts = pd.Series(chain.from_iterable(data["51_split"].dropna())).value_counts()
+print(category_counts)
 
+# Visualize top 10 categories
+category_counts.head(10).plot(kind="bar", figsize=(10, 6), color="skyblue")
+plt.title("Top 10 Categories in Column 51")
+plt.xlabel("Category")
+plt.ylabel("Frequency")
+plt.grid(axis="y", linestyle="--", alpha=0.7)
+plt.show()
 
-
-
-
-
-
+print(data.info())
 
 
 
