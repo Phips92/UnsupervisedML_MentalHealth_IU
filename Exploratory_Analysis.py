@@ -142,7 +142,7 @@ for col in [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22,
     print(data[col].unique())
 
 # Column 51 "diagnose"
-# Split combined values 
+# Split combined values and create help column
 data["51_split"] = data[51].str.split("|")
 
 unique_categories = set(chain.from_iterable(data["51_split"].dropna()))
@@ -161,8 +161,49 @@ plt.show()
 
 print(data.info())
 
+"""
+# Overview of Further Steps
 
+1. **Cleaning Closed Questions:**
+   - Map the values in closed questions (e.g., Column 42 and similar) to standardized, lowercase formats for consistency.
+   - Handle missing or NaN values by replacing them with "unknown."
+   - Verify the unique values after cleaning to ensure the mapping has been applied correctly.
 
+2. **Handling Open-Ended Questions:**
+   - Identify columns with open-ended text responses.
+   - Develop a strategy for analyzing these responses, such as:
+     a. Grouping similar answers into broader categories.
+     b. Identifying key themes or sentiments using text analysis.
+     c. Retaining original text for detailed analysis but creating helper columns for simplified categories.
+   - Handle missing or NaN values as needed.
+
+3. **Exploratory Data Analysis (EDA):**
+   - Focus on visualizations and patterns in the cleaned dataset.
+   - Explore distributions, correlations, and potential relationships between variables.
+   - Highlight key findings and areas for deeper statistical analysis or modeling.
+
+4. **Documentation:**
+   - Keep a log of all cleaning and processing steps for reproducibility.
+   - Ensure the processed dataset is well-documented and ready for analysis or further usage.
+
+"""
+
+# Column 42 mapping for clarity
+willingness_mapping = {
+    "somewhat open": "somewhat_open",
+    "neutral": "neutral",
+    "not applicable to me (i do not have a mental illness)": "not_applicable",
+    "very open": "very_open",
+    "not open at all": "not_open",
+    "somewhat not open": "somewhat_not_open"
+}
+
+# Renaming and cleaning
+data[42] = data[42].map(willingness_mapping).fillna("unknown")
+
+# Checking column 42
+print("Unique values in Column 42 after cleaning:")
+print(data[42].unique())
 
 
 
