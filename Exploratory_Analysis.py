@@ -57,6 +57,7 @@ plt.show()
 binary_cols = [col for col in numerical_col if data[col].dropna().isin([0, 1]).all()]
 true_numerical_col = [col for col in numerical_col if col not in binary_cols]
 
+
 print("\n\n\nBinary Columns (Yes/No encoded):", binary_cols, len(binary_cols))
 print("True Numerical Columns:", true_numerical_col, len(true_numerical_col))
 
@@ -336,6 +337,95 @@ print(topic_word_matrix)
 
 # Check the updated dataset
 print(data[["dominant_topic"]].head())
+
+
+
+# Convert the topic distribution into a DataFrame for easier analysis
+topic_distribution = pd.DataFrame(topic_distributions, columns=[f"Topic_{i+1}" for i in range(len(topics))])
+
+# Assign each document its dominant topic
+topic_distribution["Dominant_Topic"] = topic_distribution.idxmax(axis=1)
+
+# Count the number of entries for each topic
+topic_counts = topic_distribution["Dominant_Topic"].value_counts()
+
+# Plot the distribution of topics
+plt.figure(figsize=(12, 6))
+topic_counts.sort_index().plot(kind="bar", color="skyblue", alpha=0.8)
+plt.title("Distribution of Topics Across Documents")
+plt.xlabel("Topics")
+plt.ylabel("Number of Documents")
+plt.grid(axis="y", linestyle="--", alpha=0.7)
+plt.xticks(rotation=0)
+plt.show()
+
+# Print detailed statistics
+print("Topic Distribution:\n")
+print(topic_counts)
+print("\nProportion of Entries per Topic:")
+print(topic_counts / len(topic_distribution))
+
+# Add the dominant topic to the original dataset
+data["dominant_topic"] = topic_distribution["Dominant_Topic"].map(lambda x: int(x.split('_')[1]))
+
+# Save topic-word matrix for further exploration
+topic_word_matrix = pd.DataFrame(
+    lda_model.components_,
+    columns=feature_names,
+    index=[f"Topic {i+1}" for i in range(len(topics))]
+)
+
+print(data.head())
+
+
+
+
+
+# Checking binary collumns for missing values
+for col in binary_cols:
+    print(f"Column {col} distribution before filling missing values:")
+    print(data[col].value_counts(dropna=False))
+    print("\n")
+
+
+"""
+Impute Missing Values in Binary Columns
+
+This script processes binary columns to handle missing values ("NaN") based on conservative assumptions.
+
+1. Column 0: No missing values. No action required.
+2. Column 2: Replace missing values with "0" (assume not a tech company).
+3. Column 3: Replace missing values with "0" (assume role not tech-related).
+4. Column 16: Replace missing values with "0" (assume no medical coverage for mental health).
+5. Column 24: No missing values. No action required.
+6. Column 52: No missing values. No action required.
+"""
+
+# Handle missing values for specific columns
+binary_columns_to_impute = [2, 3, 16]
+for col in binary_columns_to_impute:
+    data[col] = data[col].fillna(0).astype(int)
+
+# Check updated distributions
+for col in [0, 2, 3, 16, 24, 52]:
+    print(f"\nColumn {col} distribution after filling missing values:")
+    print(data[col].value_counts())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
