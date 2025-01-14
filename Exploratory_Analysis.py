@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from itertools import chain
-
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.decomposition import LatentDirichletAllocation as LDA
 
 # Load the dataset
 file_path = "mental-heath-in-tech-2016_20161114.csv"
@@ -279,7 +280,62 @@ for role in all_roles:
 print(data.head())
 print(data.info())
 
+"""
+Process Open-Ended Responses in Columns 48 and 49
 
+This script processes free-text responses in columns 48 and 49 to extract latent topics using topic modeling (LDA). 
+The goal is to identify key themes within the open-ended responses and assign each response to a dominant topic.
+
+Steps:
+1. Combine columns 48 and 49 for analysis.
+2. Tokenize and vectorize the text using TF-IDF to capture term importance.
+3. Apply Latent Dirichlet Allocation (LDA) to extract latent topics.
+4. Display the top words associated with each topic.
+5. Assign each response to its most relevant topic and add this as a new column ("dominant_topic") in the dataset.
+
+Why this is done:
+- To structure and categorize unstructured free-text data for better interpretability and analysis.
+- To gain insights into the themes or concerns expressed in open-ended responses.
+"""
+
+
+
+# Combine columns 48 and 49 for analysis (same topics), as both contain open-ended responses
+combined_text = data[48].fillna("") + " " + data[49].fillna("")
+
+# Tokenization and TF-IDF vectorization
+vectorizer = TfidfVectorizer(
+    stop_words='english',
+    max_df=0.9,  # Ignore terms that appear in >90% of documents
+)
+tfidf_matrix = vectorizer.fit_transform(combined_text)
+
+# LDA for topic modeling
+lda_model = LDA(n_components=8, random_state=42)  # Extract 20 topics
+lda_model.fit(tfidf_matrix)
+
+# Display top words per topic
+n_top_words = 10
+feature_names = vectorizer.get_feature_names_out()
+topics = {}
+for topic_idx, topic in enumerate(lda_model.components_):
+    top_words = [feature_names[i] for i in topic.argsort()[:-n_top_words - 1:-1]]
+    topics[f"Topic {topic_idx + 1}"] = top_words
+    print(f"Topic {topic_idx + 1}: {', '.join(top_words)}")
+
+# Assign dominant topic for each row
+topic_distributions = lda_model.transform(tfidf_matrix)
+data["dominant_topic"] = topic_distributions.argmax(axis=1) + 1
+
+# Save topic-word matrix for further exploration
+topic_word_matrix = pd.DataFrame(lda_model.components_, columns=feature_names, index=[f"Topic {i+1}" for i in range(lda_model.n_components)])
+
+# Display the result
+print("Topic-Word Matrix:")
+print(topic_word_matrix)
+
+# Check the updated dataset
+print(data[["dominant_topic"]].head())
 
 
 
