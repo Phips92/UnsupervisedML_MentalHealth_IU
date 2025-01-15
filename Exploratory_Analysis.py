@@ -5,6 +5,9 @@ import seaborn as sns
 from itertools import chain
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.decomposition import LatentDirichletAllocation as LDA
+import nltk
+from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
 # Load the dataset
 file_path = "mental-heath-in-tech-2016_20161114.csv"
@@ -134,7 +137,7 @@ print("\n\n############\n\n")
 
 # Replacing NaN for simple categorical columns
 for col in [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23,
-            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 46, 47, 50, 53, 54, 58, 60, 62]:
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 43, 44, 45, 46, 47, 50, 53, 54, 58, 60, 62]:
     data[col] = data[col].fillna("unknown")
 
 # Checking columns
@@ -306,7 +309,7 @@ combined_text = data[48].fillna("") + " " + data[49].fillna("")
 
 # Tokenization and TF-IDF vectorization
 vectorizer = TfidfVectorizer(
-    stop_words='english',
+    stop_words="english",
     max_df=0.9,  # Ignore terms that appear in >90% of documents
 )
 tfidf_matrix = vectorizer.fit_transform(combined_text)
@@ -326,7 +329,7 @@ for topic_idx, topic in enumerate(lda_model.components_):
 
 # Assign dominant topic for each row
 topic_distributions = lda_model.transform(tfidf_matrix)
-data["dominant_topic"] = topic_distributions.argmax(axis=1) + 1
+data["dominant_topic_48_49"] = topic_distributions.argmax(axis=1) + 1
 
 # Save topic-word matrix for further exploration
 topic_word_matrix = pd.DataFrame(lda_model.components_, columns=feature_names, index=[f"Topic {i+1}" for i in range(lda_model.n_components)])
@@ -336,7 +339,7 @@ print("Topic-Word Matrix:")
 print(topic_word_matrix)
 
 # Check the updated dataset
-print(data[["dominant_topic"]].head())
+print(data[["dominant_topic_48_49"]].head())
 
 
 
@@ -344,10 +347,10 @@ print(data[["dominant_topic"]].head())
 topic_distribution = pd.DataFrame(topic_distributions, columns=[f"Topic_{i+1}" for i in range(len(topics))])
 
 # Assign each document its dominant topic
-topic_distribution["Dominant_Topic"] = topic_distribution.idxmax(axis=1)
+topic_distribution["Dominant_Topic_48_49"] = topic_distribution.idxmax(axis=1)
 
 # Count the number of entries for each topic
-topic_counts = topic_distribution["Dominant_Topic"].value_counts()
+topic_counts = topic_distribution["Dominant_Topic_48_49"].value_counts()
 
 # Plot the distribution of topics
 plt.figure(figsize=(12, 6))
@@ -366,7 +369,7 @@ print("\nProportion of Entries per Topic:")
 print(topic_counts / len(topic_distribution))
 
 # Add the dominant topic to the original dataset
-data["dominant_topic"] = topic_distribution["Dominant_Topic"].map(lambda x: int(x.split('_')[1]))
+data["dominant_topic_48_49"] = topic_distribution["Dominant_Topic_48_49"].map(lambda x: int(x.split('_')[1]))
 
 # Save topic-word matrix for further exploration
 topic_word_matrix = pd.DataFrame(
@@ -413,6 +416,113 @@ for col in [0, 2, 3, 16, 24, 52]:
 
 
 
+"""
+Handle Missing Values in Remaining Columns and Prepare for Analysis
+
+This script addresses missing values and processes the remaining columns with specific approaches:
+1. Columns 37 & 39 (open-ended text responses):
+   - Replace missing values (NaN) with "no response" for consistency.
+   - Retain the text for potential text analysis (e.g., topic modeling using LDA).
+2. Columns 43, 44, 45 (categorical responses):
+   - Replace missing values (NaN) with "unknown" to maintain consistency (line 136).
+   - Ensure that all responses are standardized and interpretable.
+3. Verify cleaned values for consistency and readiness for analysis.
+"""
+
+# Handles open-ended text response columns: 37 & 39
+text_columns = [37, 39]
+for col in text_columns:
+    data[col] = data[col].fillna("no response")  # Optional: Use "unknown" if preferred
+
+categorical_columns_with_nan = [43, 44, 45]
+
+# Verify cleaned values
+for col in text_columns + categorical_columns_with_nan:
+    print(f"Unique values in Column {col} after cleaning:")
+    print(data[col].unique())
+    print("\n")
+
+# Topic modeling on open-ended responses in columns 37 & 39
+"""
+Perform Topic Modeling on Open-Ended Responses
+
+This step uses Latent Dirichlet Allocation (LDA) to extract latent topics from the free-text responses in columns 37 and 39.
+- Extract topics of row 37 and 39 seperated.
+- Use TF-IDF for tokenization and feature extraction.
+- Apply LDA to identify key topics and their associated keywords.
+"""
+
+# Combine open-ended responses for analysis
+combined_responses = data[37]
+
+# Need to append the stopwords to extract relevant topics
+custom_stopwords = set([
+    "health", "work", "job", "issue", "issues", "affect", "want", "depends", 
+    "know", "don", "wouldn", "bring", "getting", "response", "relevant", 
+    "business", "physical", "mental", "mental", "health", "response", 
+    "stigma", "employer", "interview", "important", "feel", "think", "want", "need",
+    "depends", "really", "special", "private", "offer", "getting", "ability"
+    ])
+
+additional_stopwords = [
+    "performance", "type", "case", "required", "like", "does", "reason", "place",
+    "time", "ve", "sure", "affects", "obvious", "effect"
+    ]
+
+custom_stopwords.update(additional_stopwords)
+
+
+def preprocess_stopwords(stopwords):
+    return [word.lower() for word in stopwords if word.isalpha()]
+
+all_stopwords = preprocess_stopwords(list(ENGLISH_STOP_WORDS.union(custom_stopwords)))
+
+
+# TF-IDF vectorization
+vectorizer = TfidfVectorizer(stop_words=all_stopwords, max_df=0.9)
+tfidf_matrix = vectorizer.fit_transform(combined_responses)
+
+# LDA topic modeling
+lda_model = LDA(n_components=4, random_state=42)  
+lda_model.fit(tfidf_matrix)
+
+# Display top words for each topic
+n_top_words = 10
+feature_names = vectorizer.get_feature_names_out()
+topics = {}
+for topic_idx, topic in enumerate(lda_model.components_):
+    top_words = [feature_names[i] for i in topic.argsort()[:-n_top_words - 1:-1]]
+    topics[f"Topic {topic_idx + 1}"] = top_words
+    print(f"Topic {topic_idx + 1}: {', '.join(top_words)}")
+
+# Assign dominant topic for each row
+topic_distributions = lda_model.transform(tfidf_matrix)
+data["dominant_topic_37"] = topic_distributions.argmax(axis=1) + 1
+
+
+
+# Convert the topic distribution into a DataFrame for easier analysis
+topic_distribution = pd.DataFrame(topic_distributions, columns=[f"Topic_{i+1}" for i in range(len(topics))])
+
+# Assign each document its dominant topic
+topic_distribution["Dominant_Topic_37"] = topic_distribution.idxmax(axis=1)
+
+# Count the number of entries for each topic
+topic_counts = topic_distribution["Dominant_Topic_37"].value_counts()
+
+
+# Plot the distribution of topics
+plt.figure(figsize=(12, 6))
+topic_counts.sort_index().plot(kind="bar", color="orange", alpha=0.8)
+plt.title("Distribution of Topics Across Documents")
+plt.xlabel("Topics")
+plt.ylabel("Number of Documents")
+plt.grid(axis="y", linestyle="--", alpha=0.7)
+plt.xticks(rotation=0)
+plt.show()
+
+# Check the updated dataset
+print(data[["dominant_topic_37"]].head())
 
 
 
