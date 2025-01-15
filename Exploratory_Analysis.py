@@ -483,7 +483,7 @@ vectorizer = TfidfVectorizer(stop_words=all_stopwords, max_df=0.9)
 tfidf_matrix = vectorizer.fit_transform(combined_responses)
 
 # LDA topic modeling
-lda_model = LDA(n_components=4, random_state=42)  
+lda_model = LDA(n_components=3, random_state=42)  
 lda_model.fit(tfidf_matrix)
 
 # Display top words for each topic
@@ -523,6 +523,7 @@ plt.show()
 
 # Check the updated dataset
 print(data[["dominant_topic_37"]].head())
+
 
 
 
