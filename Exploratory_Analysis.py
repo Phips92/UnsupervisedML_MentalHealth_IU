@@ -557,6 +557,12 @@ topic_labels_39 = {
     4: "Relevance to Job or Business"
 }
 
+
+# Choose the best model (e.g., 4 topics) and add labeled topics to the dataset
+data["dominant_topic_39"] = lda_results_39[4][0].transform(
+    TfidfVectorizer(stop_words=preprocess_stopwords(list(ENGLISH_STOP_WORDS.union(stopwords_39))), max_df=0.9).fit_transform(data[39])
+).argmax(axis=1) + 1
+
 # Add labeled topics to the dataset
 data["topic_39_label"] = data["dominant_topic_39"].map(topic_labels_39)
 
@@ -567,8 +573,14 @@ print(data[["dominant_topic_39", "topic_39_label"]].head())
 
 
 
+# Save as CSV
+data.to_csv("cleaned_dataset.csv", index=False)
+
+# Save as Pickle for exact structure preservation
+data.to_pickle("cleaned_dataset.pkl")
 
 
+print(data.head())
 
 
 
