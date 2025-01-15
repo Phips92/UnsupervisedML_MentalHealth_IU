@@ -452,86 +452,116 @@ This step uses Latent Dirichlet Allocation (LDA) to extract latent topics from t
 - Apply LDA to identify key topics and their associated keywords.
 """
 
-# Combine open-ended responses for analysis
-combined_responses = data[37]
-
-# Need to append the stopwords to extract relevant topics
-custom_stopwords = set([
-    "health", "work", "job", "issue", "issues", "affect", "want", "depends", 
-    "know", "don", "wouldn", "bring", "getting", "response", "relevant", 
-    "business", "physical", "mental", "mental", "health", "response", 
+# Stopwords for each column
+stopwords_37 = set([
+    "health", "work", "job", "issue", "issues", "affect", "want", "depends",
+    "know", "don", "wouldn", "bring", "getting", "response", "relevant",
+    "business", "physical", "mental", "mental", "health", "response",
     "stigma", "employer", "interview", "important", "feel", "think", "want", "need",
-    "depends", "really", "special", "private", "offer", "getting", "ability"
-    ])
-
-additional_stopwords = [
+    "depends", "really", "special", "private", "offer", "getting", "ability",
     "performance", "type", "case", "required", "like", "does", "reason", "place",
     "time", "ve", "sure", "affects", "obvious", "effect"
-    ]
+])
 
-custom_stopwords.update(additional_stopwords)
-
+stopwords_39 = set([
+    "health", "mental", "employer", "interview", "response", "depends",
+    "job", "issues", "important", "physical", "ability", "private",
+    "stigma", "affect", "mental health", "response response", "place", "sure",
+    "hiring", "performance", "special", "does", "required", "like", "case"
+])
 
 def preprocess_stopwords(stopwords):
+    """Preprocess custom stopwords to ensure proper format."""
     return [word.lower() for word in stopwords if word.isalpha()]
 
-all_stopwords = preprocess_stopwords(list(ENGLISH_STOP_WORDS.union(custom_stopwords)))
+# Functions for LDA Topic Modeling
+def run_lda(text_data, stopwords, n_topics_list):
+    """
+    Run LDA for a range of topic numbers and visualize the results.
+
+    Args:
+    - text_data (pd.Series): The text data to process.
+    - stopwords (set): Custom stopwords to filter.
+    - n_topics_list (list): List of topic numbers to explore.
+
+    Returns:
+    - dict: A dictionary mapping the number of topics to their respective LDA model and topics.
+    """
+    stopwords_processed = preprocess_stopwords(list(ENGLISH_STOP_WORDS.union(stopwords)))
+    vectorizer = TfidfVectorizer(stop_words=stopwords_processed, max_df=0.9)
+    tfidf_matrix = vectorizer.fit_transform(text_data)
+
+    results = {}
+    for n_topics in n_topics_list:
+        lda_model = LDA(n_components=n_topics, random_state=42)
+        lda_model.fit(tfidf_matrix)
+
+        feature_names = vectorizer.get_feature_names_out()
+        topics = {}
+        print(f"\nTop Words for {n_topics} Topics:")
+        for topic_idx, topic in enumerate(lda_model.components_):
+            top_words = [feature_names[i] for i in topic.argsort()[:-11:-1]]
+            topics[f"Topic {topic_idx + 1}"] = top_words
+            print(f"Topic {topic_idx + 1}: {', '.join(top_words)}")
+
+        # Visualize topic distribution
+        topic_distributions = lda_model.transform(tfidf_matrix)
+        topic_distribution_df = pd.DataFrame(
+            topic_distributions,
+            columns=[f"Topic_{i+1}" for i in range(n_topics)]
+        )
+        topic_distribution_df["Dominant_Topic"] = topic_distribution_df.idxmax(axis=1)
+        topic_counts = topic_distribution_df["Dominant_Topic"].value_counts()
+
+        plt.figure(figsize=(12, 6))
+        topic_counts.sort_index().plot(kind="bar", color="orange", alpha=0.8)
+        plt.title(f"Distribution of {n_topics} Topics Across Documents")
+        plt.xlabel("Topics")
+        plt.ylabel("Number of Documents")
+        plt.grid(axis="y", linestyle="--", alpha=0.7)
+        plt.xticks(rotation=0)
+        plt.show()
+
+        results[n_topics] = (lda_model, topics)
+    return results
+
+# Column 37 - Running LDA
+print("\n--- Topic Modeling for Column 37 ---")
+lda_results_37 = run_lda(data[37], stopwords_37, [3, 4, 5])
+
+# Label topics for Column 37
+topic_labels_37 = {
+    1: "Personal Accommodations",
+    2: "Fear of Discrimination",
+    3: "Chances and Bias",
+    4: "Hiring Concerns"
+}
+
+# Choose the best model (e.g., 4 topics) and add labeled topics to the dataset
+data["dominant_topic_37"] = lda_results_37[4][0].transform(
+    TfidfVectorizer(stop_words=preprocess_stopwords(list(ENGLISH_STOP_WORDS.union(stopwords_37))), max_df=0.9).fit_transform(data[37])
+).argmax(axis=1) + 1
+data["topic_37_label"] = data["dominant_topic_37"].map(topic_labels_37)
+
+# Column 39 - Running LDA
+print("\n--- Topic Modeling for Column 39 ---")
+lda_results_39 = run_lda(data[39], stopwords_39, [3, 4, 5])
 
 
-# TF-IDF vectorization
-vectorizer = TfidfVectorizer(stop_words=all_stopwords, max_df=0.9)
-tfidf_matrix = vectorizer.fit_transform(combined_responses)
 
-# LDA topic modeling
-lda_model = LDA(n_components=3, random_state=42)  
-lda_model.fit(tfidf_matrix)
+# Assign labels for 4 topics
+topic_labels_39 = {
+    1: "Reasons for Disclosure or Non-Disclosure",
+    2: "Fear of Discrimination or Negative Impact",
+    3: "Personal Feelings and Uncertainty",
+    4: "Relevance to Job or Business"
+}
 
-# Display top words for each topic
-n_top_words = 10
-feature_names = vectorizer.get_feature_names_out()
-topics = {}
-for topic_idx, topic in enumerate(lda_model.components_):
-    top_words = [feature_names[i] for i in topic.argsort()[:-n_top_words - 1:-1]]
-    topics[f"Topic {topic_idx + 1}"] = top_words
-    print(f"Topic {topic_idx + 1}: {', '.join(top_words)}")
-
-# Assign dominant topic for each row
-topic_distributions = lda_model.transform(tfidf_matrix)
-data["dominant_topic_37"] = topic_distributions.argmax(axis=1) + 1
-
-
-
-# Convert the topic distribution into a DataFrame for easier analysis
-topic_distribution = pd.DataFrame(topic_distributions, columns=[f"Topic_{i+1}" for i in range(len(topics))])
-
-# Assign each document its dominant topic
-topic_distribution["Dominant_Topic_37"] = topic_distribution.idxmax(axis=1)
-
-# Count the number of entries for each topic
-topic_counts = topic_distribution["Dominant_Topic_37"].value_counts()
-
-
-# Plot the distribution of topics
-plt.figure(figsize=(12, 6))
-topic_counts.sort_index().plot(kind="bar", color="orange", alpha=0.8)
-plt.title("Distribution of Topics Across Documents")
-plt.xlabel("Topics")
-plt.ylabel("Number of Documents")
-plt.grid(axis="y", linestyle="--", alpha=0.7)
-plt.xticks(rotation=0)
-plt.show()
+# Add labeled topics to the dataset
+data["topic_39_label"] = data["dominant_topic_39"].map(topic_labels_39)
 
 # Check the updated dataset
-print(data[["dominant_topic_37"]].head())
-
-
-
-
-
-
-
-
-
+print(data[["dominant_topic_39", "topic_39_label"]].head())
 
 
 
