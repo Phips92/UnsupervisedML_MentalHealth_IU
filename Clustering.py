@@ -29,7 +29,7 @@ pca.fit(data_scaled)
 print(pca.explained_variance_ratio_.cumsum())
 
 # PCA for clustering (retain 90% variance)
-pca_clustering = PCA(n_components=0.90)  # Automatically choose components for ~90% variance
+pca_clustering = PCA(n_components=17)  
 data_pca_clustering = pca_clustering.fit_transform(data_scaled)
 print(f"Number of PCA components for 90% variance: {data_pca_clustering.shape[1]}")
 
@@ -37,14 +37,28 @@ print(f"Number of PCA components for 90% variance: {data_pca_clustering.shape[1]
 pca_visualization = PCA(n_components=2)
 data_pca_visualization = pca_visualization.fit_transform(data_scaled)
 
-# Clustering (K-Means)
-kmeans = KMeans(n_clusters=6, random_state=42)
-clusters = kmeans.fit_predict(data_scaled)
+
+# Find the optimal number of clusters
+silhouette_scores = {}
+for n_clusters in range(2, 20):  # Test for cluster numbers from 2 to 10
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+    clusters = kmeans.fit_predict(data_pca_clustering)
+    score = silhouette_score(data_pca_clustering, clusters)
+    silhouette_scores[n_clusters] = score
+    print(f"n_clusters = {n_clusters}, Silhouette Score = {score}")
+
+# Choose the optimal number of clusters based on silhouette score
+optimal_clusters = max(silhouette_scores, key=silhouette_scores.get)
+print(f"Optimal number of clusters: {optimal_clusters}")
+
+# Perform clustering with the optimal number of clusters
+kmeans = KMeans(n_clusters=optimal_clusters, random_state=42)
+clusters = kmeans.fit_predict(data_pca_clustering)
 data["cluster"] = clusters
 
-# Evaluate clusters
-silhouette_avg = silhouette_score(data_scaled, clusters)
-print(f"Silhouette Score: {silhouette_avg}")
+# Evaluate final clusters
+silhouette_avg = silhouette_score(data_pca_clustering, clusters)
+print(f"Final Silhouette Score with {optimal_clusters} clusters: {silhouette_avg}")
 
 # Visualize clusters
 plt.figure(figsize=(8, 6))
@@ -57,5 +71,14 @@ plt.legend(title="Cluster")
 plt.grid()
 plt.tight_layout()
 plt.show()
+
+# Save the updated dataset
+data.to_csv("clustered_dataset.csv", index=False)
+
+#print(data["cluster"].unique())
+
+
+
+
 
 
