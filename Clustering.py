@@ -12,13 +12,19 @@ data = pd.read_csv("cleaned_dataset.csv")
 # Get role_columns
 role_columns = [col for col in data.columns if col.startswith("role_")]
 
+# Get topic_columns from 48/49
+topic_columns = [col for col in data.columns if col.startswith("topic_")]
+
+# Get dominant_topic columns from 37/39 
+data = data.drop(columns=["dominant_topic_48_49", "dominant_topic_48_49_label"], errors="ignore")
+dominant_topics_columns = [col for col in data.columns if col.startswith("dominant_topic")]
+
 # Feature selection
-selected_features = role_columns + ["55", "56", "topic_37_label", "topic_39_label"]
+selected_features = role_columns + topic_columns + dominant_topics_columns + ["55", "56"]
 
 # Preprocessing
 data_numeric = data[selected_features].copy()
 data_numeric["56"] = data_numeric["56"].astype("category").cat.codes  # Encode gender
-data_numeric = pd.get_dummies(data_numeric, columns=["topic_37_label", "topic_39_label"])  # One-hot encoding
 
 scaler = StandardScaler()
 data_scaled = scaler.fit_transform(data_numeric)
