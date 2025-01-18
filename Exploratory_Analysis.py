@@ -313,20 +313,19 @@ Why this is done:
 - To gain insights into the themes or concerns expressed in open-ended responses.
 """
 
+# Define additional stopwords
+additional_stopwords = ["disorder", "bipolar", "depression", "mood", "generalized", "anxiety"]
+all_stopwords = list(ENGLISH_STOP_WORDS.union(additional_stopwords))
 
-
-# Combine columns 48 and 49 for analysis (same topics), as both contain open-ended responses
+# Combine columns 48 and 49 for analysis
 combined_text = data[48].fillna("") + " " + data[49].fillna("")
 
 # Tokenization and TF-IDF vectorization
-vectorizer = TfidfVectorizer(
-    stop_words="english",
-    max_df=0.9,  # Ignore terms that appear in >90% of documents
-)
+vectorizer = TfidfVectorizer(stop_words=all_stopwords, max_df=0.9)
 tfidf_matrix = vectorizer.fit_transform(combined_text)
 
 # LDA for topic modeling
-lda_model = LDA(n_components=8, random_state=42)  # Extract 20 topics
+lda_model = LDA(n_components=8, random_state=42)
 lda_model.fit(tfidf_matrix)
 
 # Display top words per topic
@@ -338,22 +337,8 @@ for topic_idx, topic in enumerate(lda_model.components_):
     topics[f"Topic {topic_idx + 1}"] = top_words
     print(f"Topic {topic_idx + 1}: {', '.join(top_words)}")
 
-# Assign dominant topic for each row
-topic_distributions = lda_model.transform(tfidf_matrix)
-data["dominant_topic_48_49"] = topic_distributions.argmax(axis=1) + 1
 
-# Save topic-word matrix for further exploration
-topic_word_matrix = pd.DataFrame(lda_model.components_, columns=feature_names, index=[f"Topic {i+1}" for i in range(lda_model.n_components)])
-
-# Display the result
-print("Topic-Word Matrix:")
-print(topic_word_matrix)
-
-# Check the updated dataset
-print(data[["dominant_topic_48_49"]].head())
-
-
-
+"""
 # Convert the topic distribution into a DataFrame for easier analysis
 topic_distribution = pd.DataFrame(topic_distributions, columns=[f"Topic_{i+1}" for i in range(len(topics))])
 
@@ -362,34 +347,48 @@ topic_distribution["Dominant_Topic_48_49"] = topic_distribution.idxmax(axis=1)
 
 # Count the number of entries for each topic
 topic_counts = topic_distribution["Dominant_Topic_48_49"].value_counts()
+"""
+
+# Define topic labels based on extracted themes
+topic_labels_48_49 = {
+    1: "Trauma and Stress",
+    2: "Personality Disorders",
+    3: "Social Phobias and Trauma",
+    4: "Eating Disorders and Gender Identity",
+    5: "Attention and Hyperactivity Disorders",
+    6: "Developmental Disorders",
+    7: "Autism Spectrum and Social Challenges",
+    8: "Obsessive-Compulsive and Substance Abuse"
+}
+
+# Assign dominant topic for each row
+topic_distributions = lda_model.transform(tfidf_matrix)
+data["dominant_topic_48_49"] = topic_distributions.argmax(axis=1) + 1  # Topic index starts at 1
+
+# Map topic labels
+data["dominant_topic_48_49_label"] = data["dominant_topic_48_49"].map(topic_labels_48_49)
+
+# Count the occurrences of each topic
+topic_counts = data["dominant_topic_48_49_label"].value_counts()
 
 # Plot the distribution of topics
-plt.figure(figsize=(12, 6))
+plt.figure(figsize=(14, 8))
 topic_counts.sort_index().plot(kind="bar", color="skyblue", alpha=0.8)
 plt.title("Distribution of Topics Across Documents")
 plt.xlabel("Topics")
 plt.ylabel("Number of Documents")
 plt.grid(axis="y", linestyle="--", alpha=0.7)
-plt.xticks(rotation=0)
+plt.xticks(rotation=45, ha="right", fontsize=12)
+plt.tight_layout()
 plt.show()
 
-# Print detailed statistics
-print("Topic Distribution:\n")
-print(topic_counts)
-print("\nProportion of Entries per Topic:")
-print(topic_counts / len(topic_distribution))
+# One-Hot Encode the dominant_topic_48_49_label
+for topic_label in topic_labels_48_49.values():
+    column_name = f"topic_{topic_label.replace(' ', '_')}"
+    data[column_name] = (data["dominant_topic_48_49_label"] == topic_label).astype(int)
 
-# Add the dominant topic to the original dataset
-data["dominant_topic_48_49"] = topic_distribution["Dominant_Topic_48_49"].map(lambda x: int(x.split('_')[1]))
 
-# Save topic-word matrix for further exploration
-topic_word_matrix = pd.DataFrame(
-    lda_model.components_,
-    columns=feature_names,
-    index=[f"Topic {i+1}" for i in range(len(topics))]
-)
 
-print(data.head())
 
 
 
