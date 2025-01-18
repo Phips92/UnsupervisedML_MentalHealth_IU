@@ -168,11 +168,12 @@ category_counts = pd.Series(chain.from_iterable(data["51_split"].dropna())).valu
 print(category_counts)
 
 # Visualize top 10 categories
-category_counts.head(10).plot(kind="bar", figsize=(10, 6), color="skyblue")
+category_counts.head(10).plot(kind="bar", figsize=(16, 9), color="skyblue")
 plt.title("Top 10 Categories in Column 51")
 plt.xlabel("Category")
 plt.ylabel("Frequency")
 plt.grid(axis="y", linestyle="--", alpha=0.7)
+plt.xticks(rotation=45, ha="right", fontsize=12)
 plt.show()
 
 print(data.info())
@@ -338,17 +339,6 @@ for topic_idx, topic in enumerate(lda_model.components_):
     print(f"Topic {topic_idx + 1}: {', '.join(top_words)}")
 
 
-"""
-# Convert the topic distribution into a DataFrame for easier analysis
-topic_distribution = pd.DataFrame(topic_distributions, columns=[f"Topic_{i+1}" for i in range(len(topics))])
-
-# Assign each document its dominant topic
-topic_distribution["Dominant_Topic_48_49"] = topic_distribution.idxmax(axis=1)
-
-# Count the number of entries for each topic
-topic_counts = topic_distribution["Dominant_Topic_48_49"].value_counts()
-"""
-
 # Define topic labels based on extracted themes
 topic_labels_48_49 = {
     1: "Trauma and Stress",
@@ -386,9 +376,6 @@ plt.show()
 for topic_label in topic_labels_48_49.values():
     column_name = f"topic_{topic_label.replace(' ', '_')}"
     data[column_name] = (data["dominant_topic_48_49_label"] == topic_label).astype(int)
-
-
-
 
 
 
