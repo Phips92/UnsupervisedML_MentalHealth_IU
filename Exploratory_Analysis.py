@@ -581,7 +581,15 @@ data["topic_39_label"] = data["dominant_topic_39"].map(topic_labels_39)
 print(data[["dominant_topic_39", "topic_39_label"]].head())
 
 
+# Transform dominant_topic columns into binary columns
+for topic_col in ["dominant_topic_37", "dominant_topic_39"]:
+    unique_topics = data[topic_col].unique()  # Identify unique topics in the column
+    for topic in unique_topics:
+        binary_col = f"{topic_col}_topic_{topic}"
+        data[binary_col] = (data[topic_col] == topic).astype(int)
 
+# Drop original dominant_topic columns (optional if binary is sufficient)
+data = data.drop(columns=["dominant_topic_37", "dominant_topic_39"])
 
 
 # Save as CSV
