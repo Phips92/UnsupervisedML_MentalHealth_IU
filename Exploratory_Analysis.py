@@ -64,9 +64,20 @@ true_numerical_col = [col for col in numerical_col if col not in binary_cols]
 print("\n\n\nBinary Columns (Yes/No encoded):", binary_cols, len(binary_cols))
 print("True Numerical Columns:", true_numerical_col, len(true_numerical_col))
 
+# Define plausible age range
+MIN_AGE = 18
+MAX_AGE = 75
+
+data[55] = pd.to_numeric(data[55], errors="coerce")  # Convert non-numeric to NaN
+data[55] = data[55].where((data[55] >= MIN_AGE) & (data[55] <= MAX_AGE))  # Filter out invalid ages
+
+# Fill missing values with the median age
+median_age = data[55].median()
+data[55] = data[55].fillna(median_age)
+
 # Analyze the true numerical column (age, column 55)
 plt.figure(figsize=(8, 5))
-sns.histplot(data[55].dropna(), kde=True, bins=200, color="skyblue")
+sns.histplot(data[55], kde=True, bins=200, color="skyblue")
 plt.title("Distribution of Age (Column 55)")
 plt.xlabel("Age")
 plt.ylabel("Frequency")
@@ -580,7 +591,7 @@ data.to_csv("cleaned_dataset.csv", index=False)
 data.to_pickle("cleaned_dataset.pkl")
 
 
-print(data.head())
+
 
 
 
