@@ -176,6 +176,50 @@ plt.grid(axis="y", linestyle="--", alpha=0.7)
 plt.xticks(rotation=45, ha="right", fontsize=12)
 plt.show()
 
+# Select the top 10 categories
+top_10_categories = category_counts.head(10).index
+print(f"Top 10 Categories: {top_10_categories}")
+
+
+# Define top 10 categories and their shortened labels
+diagnose_labels = {
+    1: "Mood_Disorder",
+    2: "Anxiety_Disorder",
+    3: "ADHD",
+    4: "PTSD",
+    5: "OCD",
+    6: "Stress_Response",
+    7: "Personality_Disorder",
+    8: "Substance_Use",
+    9: "Eating_Disorder",
+    10: "Addictive_Disorder",
+    11: "Other"  # All remaining diagnoses
+}
+
+# Map diagnoses to their corresponding labels
+def map_diagnose_category(diagnoses):
+    if not isinstance(diagnoses, list):  # Handle invalid lists
+        return 11
+    for category in diagnoses:
+        for label, name in diagnose_labels.items():
+            if label != 11 and category in name:
+                return label
+    return 11  # Assign "Other" if no match found
+
+# One-hot encode the diagnoses based on the mapping
+for label, category in diagnose_labels.items():
+    column_name = f"diagnose_{category}"
+    data[column_name] = data["51_split"].apply(
+        lambda x: int(map_diagnose_category(x) == label) if isinstance(x, list) else 0
+    )
+
+# Verify the result
+print(f"Diagnose labels:\n{diagnose_labels}")
+print(data.head())
+
+# Drop the original Column 51 and its split helper column
+data = data.drop(columns=["51", "51_split"], errors="ignore")
+
 print(data.info())
 
 """
@@ -583,6 +627,11 @@ for topic_col, label_mapping in topic_labels_mapping.items():
 
 # Drop original dominant_topic columns and their labels as they are now redundant
 data.drop(columns=["dominant_topic_37", "topic_37_label", "dominant_topic_39", "topic_39_label"], inplace=True)
+
+# Drop unnecessary columns that are already one-hot-encoded
+columns_to_drop = ["37", "39", "48", "49", "61_split"]
+data = data.drop(columns=columns_to_drop, errors="ignore")
+
 
 
 # Save as CSV
