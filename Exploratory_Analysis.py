@@ -183,35 +183,45 @@ print(f"Top 10 Categories: {top_10_categories}")
 
 # Define top 10 categories and their shortened labels
 diagnose_labels = {
-    1: "Mood_Disorder",
-    2: "Anxiety_Disorder",
-    3: "ADHD",
-    4: "PTSD",
-    5: "OCD",
-    6: "Stress_Response",
-    7: "Personality_Disorder",
-    8: "Substance_Use",
-    9: "Eating_Disorder",
-    10: "Addictive_Disorder",
-    11: "Other"  # All remaining diagnoses
+    "mood disorder (depression, bipolar disorder, etc)": "Mood_Disorder",
+    "anxiety disorder (generalized, social, phobia, etc)": "Anxiety_Disorder",
+    "attention deficit hyperactivity disorder": "ADHD",
+    "post-traumatic stress disorder": "PTSD",
+    "obsessive-compulsive disorder": "OCD",
+    "stress response syndromes": "Stress_Response",
+    "personality disorder (borderline, antisocial, paranoid, etc)": "Personality_Disorder",
+    "substance use disorder": "Substance_Use",
+    "eating disorder (anorexia, bulimia, etc)": "Eating_Disorder",
+    "addictive disorder": "Addictive_Disorder",
 }
 
-# Map diagnoses to their corresponding labels
-def map_diagnose_category(diagnoses):
-    if not isinstance(diagnoses, list):  # Handle invalid lists
-        return 11
-    for category in diagnoses:
-        for label, name in diagnose_labels.items():
-            if label != 11 and category in name:
-                return label
-    return 11  # Assign "Other" if no match found
 
-# One-hot encode the diagnoses based on the mapping
-for label, category in diagnose_labels.items():
-    column_name = f"diagnose_{category}"
-    data[column_name] = data["51_split"].apply(
-        lambda x: int(map_diagnose_category(x) == label) if isinstance(x, list) else 0
-    )
+# Function to check if a category belongs to a specific label
+def is_category_in_label(categories, target_category):
+    """Check if a category is in the target list."""
+    if not isinstance(categories, list):
+        return 0
+    return int(target_category in categories)
+
+
+# Function to check if a category is "Other"
+def is_other_category(categories, top_categories):
+    """Check if any category in the list is not in the top categories."""
+    if not isinstance(categories, list):
+        return 0
+    return int(any(cat not in top_categories for cat in categories))
+
+
+# Add one-hot encoded columns for the top 10 categories
+for category, label in diagnose_labels.items():
+    column_name = f"diagnose_{label}"
+    data[column_name] = data["51_split"].apply(is_category_in_label, target_category=category)
+
+# Create "Other" column for all diagnoses not in the top 10
+data["diagnose_Other"] = data["51_split"].apply(is_other_category, top_categories=top_10_categories)
+
+# Verify the result
+print(data[[f"diagnose_{label}" for label in diagnose_labels.values()] + ["diagnose_Other"]].head())
 
 # Verify the result
 print(f"Diagnose labels:\n{diagnose_labels}")
