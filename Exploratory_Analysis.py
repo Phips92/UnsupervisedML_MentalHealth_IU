@@ -227,8 +227,8 @@ print(data[[f"diagnose_{label}" for label in diagnose_labels.values()] + ["diagn
 print(f"Diagnose labels:\n{diagnose_labels}")
 print(data.head())
 
-# Drop the original Column 51 and its split helper column
-data = data.drop(columns=["51", "51_split"], errors="ignore")
+# Drop the original Column 51 and its split helper column, 
+data = data.drop(columns=[51, "51_split"], errors="ignore")
 
 print(data.info())
 
@@ -639,8 +639,160 @@ for topic_col, label_mapping in topic_labels_mapping.items():
 data.drop(columns=["dominant_topic_37", "topic_37_label", "dominant_topic_39", "topic_39_label"], inplace=True)
 
 # Drop unnecessary columns that are already one-hot-encoded
-columns_to_drop = ["37", "39", "48", "49", "61_split"]
+columns_to_drop = [37, 39, 48, 49, 61, "61_split", "dominant_topic_48_49", "dominant_topic_48_49_label"]
 data = data.drop(columns=columns_to_drop, errors="ignore")
+
+country_to_region = {
+    # North America
+    "united states of america": "North America",
+    "canada": "North America",
+    "mexico": "North America",
+    "japan": "Asia",  #put japan not to Asia since they are more a "western country"
+
+    # Europe
+    "united kingdom": "Europe",
+    "germany": "Europe",
+    "france": "Europe",
+    "netherlands": "Europe",
+    "sweden": "Europe",
+    "italy": "Europe",
+    "spain": "Europe",
+    "lithuania": "Europe",
+    "czech republic": "Europe",
+    "poland": "Europe",
+    "austria": "Europe",
+    "belgium": "Europe",
+    "denmark": "Europe",
+    "norway": "Europe",
+    "finland": "Europe",
+    "slovakia": "Europe",
+    "bulgaria": "Europe",
+    "romania": "Europe",
+    "hungary": "Europe",
+    "estonia": "Europe",
+    "bosnia and herzegovina": "Europe",
+    "serbia": "Europe",
+    "switzerland": "Europe",
+    "ireland": "Europe",
+    "greece": "Europe",
+
+    # South America
+    "brazil": "South America",
+    "argentina": "South America",
+    "venezuela": "South America",
+    "colombia": "South America",
+    "chile": "South America",
+    "ecuador": "South America",
+    "costa rica": "South America",
+    "guatemala": "South America",
+
+    # Asia
+    "india": "Asia",
+    "china": "Asia",
+    "vietnam": "Asia",
+    "pakistan": "Asia",
+    "iran": "Asia",
+    "bangladesh": "Asia",
+    "taiwan": "Asia",
+    "united arab emirates": "Asia",
+    "brunei": "Asia",
+
+    # Oceania
+    "australia": "Oceania",
+    "new zealand": "Oceania",
+
+    # Africa
+    "south africa": "Africa",
+    "algeria": "Africa",
+
+    # Russia
+    "russia": "Russia",
+
+    # Unknown or Other
+    "other": "Unknown"
+}
+
+
+state_to_region = {
+    # Northeast
+    "new york": "Northeast",
+    "massachusetts": "Northeast",
+    "pennsylvania": "Northeast",
+    "new jersey": "Northeast",
+    "vermont": "Northeast",
+    "connecticut": "Northeast",
+    "maine": "Northeast",
+    "rhode island": "Northeast",
+    "new hampshire": "Northeast",
+
+    # South
+    "florida": "South",
+    "georgia": "South",
+    "texas": "South",
+    "virginia": "South",
+    "tennessee": "South",
+    "kentucky": "South",
+    "north carolina": "South",
+    "south carolina": "South",
+    "alabama": "South",
+    "mississippi": "South",
+    "arkansas": "South",
+    "louisiana": "South",
+    "west virginia": "South",
+    "maryland": "South",
+    "district of columbia": "South",
+    "delaware": "South",
+
+    # Midwest
+    "illinois": "Midwest",
+    "ohio": "Midwest",
+    "michigan": "Midwest",
+    "indiana": "Midwest",
+    "minnesota": "Midwest",
+    "iowa": "Midwest",
+    "wisconsin": "Midwest",
+    "kansas": "Midwest",
+    "missouri": "Midwest",
+    "nebraska": "Midwest",
+    "south dakota": "Midwest",
+    "north dakota": "Midwest",
+
+    # West
+    "california": "West",
+    "washington": "West",
+    "oregon": "West",
+    "nevada": "West",
+    "arizona": "West",
+    "utah": "West",
+    "colorado": "West",
+    "idaho": "West",
+    "alaska": "West",
+    "montana": "West",
+    "wyoming": "West",
+    "hawaii": "West",
+
+    # Unknown
+    "unknown": "Unknown"
+}
+
+
+# Apply the mappings to Columns 57 and 59
+data["57_region"] = data[57].map(country_to_region)
+data["59_region"] = data[59].map(country_to_region)
+
+# Apply the mappings to Columns 58 and 60
+data["58_us_region"] = data[58].map(state_to_region)
+data["60_us_region"] = data[60].map(state_to_region)
+
+# Drop original columns if they are no longer needed
+data = data.drop(columns=[57, 58, 59, 60], errors="ignore")
+
+
+# Verify cleaned values
+for col in data:
+    print(f"Unique values in Column {col} after cleaning:")
+    print(data[col].unique())
+    print("\n")
 
 
 
