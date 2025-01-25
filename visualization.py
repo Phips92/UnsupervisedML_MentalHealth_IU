@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import geopandas as gpd
 
 def plot_one_hot_encoded_distribution(data, columns, title="One-Hot Encoded Distribution"):
     """
@@ -108,7 +108,41 @@ def plot_unknown_values(data, unknown_values=["unknown"]):
         print("No 'unknown' values found in the dataset.")
 
 
+def plot_region_distribution(data, region_column, title="Regional Distribution"):
+    """
+    Visualize the distribution of data points across regions.
+    
+    Args:
+        data (pd.DataFrame): The dataset containing a region column.
+        region_column (str): The column indicating the geographic regions.
+        title (str): Title for the plot.
+    """
+    # Count occurrences by region
+    region_counts = data[region_column].value_counts()
+    region_percentages = (region_counts / region_counts.sum()) * 100  
 
+    # Bar chart for regional distribution
+    plt.figure(figsize=(12, 6))
+    region_counts.plot(kind="bar", color="skyblue", alpha=0.8)
+    plt.title(f"{title}")
+    plt.xlabel("Regions")
+    plt.ylabel("Count")
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    plt.xticks(rotation=45, ha="right")
+    plt.tight_layout()
+    plt.show()
+
+    # Pie chart for regional distribution with legend
+    plt.figure(figsize=(8, 8))
+    wedges, _ = plt.pie(region_counts, startangle=90, colors=plt.cm.Paired.colors, wedgeprops={"edgecolor": "white"})
+    plt.title(f"{title}", fontsize=14)
+    
+    # Add legend on the side with percentages
+    legend_labels = [f"{region}: {count} ({percentage:.1f}%)"for region, count, percentage in zip(region_counts.index, region_counts, region_percentages)]
+
+    plt.legend(wedges, labels=legend_labels, loc="center left", bbox_to_anchor=(1, 0.5), fontsize=10,title="Regions")
+    plt.tight_layout()
+    plt.show()
 
 
 
