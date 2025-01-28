@@ -7,9 +7,13 @@ from visualization import (
     plot_age_distribution,
     plot_region_distribution,
 )
+from investigation_24 import investigate_column_24
 
 # Load your cleaned dataset
 data = pd.read_csv("clustered_dataset.csv")
+
+investigate_column_24(data)
+
 """
 # Role Columns
 role_columns = [col for col in data.columns if col.startswith("role_")]
@@ -55,10 +59,15 @@ plot_region_distribution(data, region_column="57_region", title="Data Points by 
 plot_region_distribution(data, region_column="59_region", title="Data Points by Region (Working Country)")
 
 # Visualize the distribution for "57_region"
-plot_region_distribution(data, region_column="58_us_region", title="Data Points by Region (Living US State)")
+# Filter out "unknown" values from the "58_us_region" column
+filtered_data = data[data["58_us_region"].str.lower() != "unknown"]
 
-# Visualize the distribution for "59_region"
-plot_region_distribution(data, region_column="60_us_region", title="Data Points by Region (Working US State)")
+plot_region_distribution(filtered_data, region_column="58_us_region", title="Data Points by Region (Living US State)")
+
+# Visualize the distribution for "60_us_region"
+# Filter out "unknown" values from the "60_us_region" column
+filtered_data = data[data["60_us_region"].str.lower() != "unknown"]
+plot_region_distribution(filtered_data, region_column="60_us_region", title="Data Points by Region (Working US State)")
 
 
 
