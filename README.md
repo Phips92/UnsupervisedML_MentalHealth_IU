@@ -35,7 +35,7 @@ The dataset consists of survey responses from technology employees regarding the
    - Age distribution, regional distributions, diagnose distribution, role distribution and correlation matrices.
 
 ## Results
-The findings are summarized in the [Results/Results.md](Results.md) file, which includes:
+The findings are summarized in the [Results.md](Results/Results.md) file, which includes:
 - Analysis of the strongest parameters for each cluster.
 - Insights into age, regional distributions, and mental health concerns.
 - Recommendations for HR interventions based on clustering insights.
