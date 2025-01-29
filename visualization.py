@@ -23,22 +23,6 @@ def plot_one_hot_encoded_distribution(data, columns, title="One-Hot Encoded Dist
     plt.show()
 
 
-def plot_correlation_heatmap(data, numerical_columns, title="Correlation Heatmap"):
-    """
-    Plot a heatmap of correlations between numerical columns.
-    
-    Args:
-        data (pd.DataFrame): The dataset containing numerical columns.
-        numerical_columns (list): List of numerical columns to include.
-        title (str): Title for the heatmap.
-    """
-    correlation_matrix = data[numerical_columns].corr()
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(correlation_matrix, annot=False, fmt=".2f", cmap="coolwarm", square=True)
-    plt.title(title)
-    plt.tight_layout()
-    plt.show()
-
 
 def plot_categorical_distribution(data, column, title="Categorical Distribution"):
     """
@@ -143,6 +127,18 @@ def plot_region_distribution(data, region_column, title="Regional Distribution")
     plt.legend(wedges, labels=legend_labels, loc="center left", bbox_to_anchor=(1, 0.5), fontsize=10,title="Regions")
     plt.tight_layout()
     plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
