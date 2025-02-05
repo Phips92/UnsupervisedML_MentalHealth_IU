@@ -41,11 +41,7 @@ plot_age_distribution(data, "55")
 
 # Plot Unknown Values
 plot_unknown_values(data)
-"""
-shapefile_path = "/home/philipp/Desktop/Data_Science_Studium/3.Semester/Unsupervised_ML/Development/world_map/ne_110m_admin_0_countries.shp"
-# Load the shapefile
-world = gpd.read_file(shapefile_path)
-"""
+
 # Inspect the available columns
 print(world.columns)
 
