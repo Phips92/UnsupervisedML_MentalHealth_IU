@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import chi2_contingency
+import os
 
 # Load the clustered dataset
 data = pd.read_csv("clustered_dataset.csv")
@@ -76,35 +77,36 @@ columns_with_many_unique_values = [col for col in data.columns if data[col].nuni
 print("Columns with more than 8 unique values:")
 for col in columns_with_many_unique_values:
     print(f"{col}: {data[col].nunique()} unique values")
-"""
+
+
+# Define the output directory
+output_dir = os.path.join(os.getcwd(), "Results")
+
 # Proceed with plotting only the filtered columns
 for col in filtered_categorical_columns:
     frequency = data.groupby("cluster")[col].value_counts(normalize=True).unstack()
-    frequency.plot(kind="bar", stacked=True, figsize=(14, 8), colormap="viridis")
-    plt.title(f"Distribution of '{col}' Across Clusters")
-    plt.xlabel("Cluster")
-    plt.ylabel("Proportion")
-    plt.legend(title=col, bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    fig, ax = plt.subplots(figsize=(14, 8))
+    frequency.plot(kind="bar", stacked=True, colormap="viridis", ax=ax)
+    
+    ax.set_title(f"Distribution of '{col}' Across Clusters")
+    ax.set_xlabel("Cluster")
+    ax.set_ylabel("Proportion")
+    ax.legend(title=col, bbox_to_anchor=(1.05, 1), loc="upper right")
+    # Adjust layout
     plt.tight_layout()
-    plt.show()
-"""
+    # Save the plot as a PNG file
+    plot_filename = os.path.join(output_dir, f"cluster_distribution_{col}.png")
+    plt.savefig(plot_filename, dpi=300, bbox_inches="tight")
+    # Show the plot
+    #plt.show()
+    print(f"Saved plot: {plot_filename}")
 
 
 
-
-
-
-
-
-
-
-
-
-
-"""
 # Save cluster profiles to a CSV file for further inspection
 cluster_means.to_csv("cluster_profiles.csv", index=True)
 binary_frequencies.to_csv("binary_frequencies.csv", index=True)
 
 print("\nCluster profiles and binary frequencies saved to CSV.")
-"""
+
